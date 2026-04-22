@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="lv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vasaras darba piedāvājumi studentiem</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --accent: #f59e0b;
+            --success: #10b981;
+            --danger: #ef4444;
+            --bg: #f8fafc;
+            --bg-light: #ffffff;
+            --text-dark: #1e293b;
+            --text-light: #64748b;
+            --border: #e2e8f0;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+            --shadow-lg: 0 20px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text-dark);
+            line-height: 1.6;
+        }
+
+        /* HEADER */
+        header {
+            background: linear-gradient(135deg, var(--primary) 0%, #1e40af 100%);
+            color: white;
+            padding: 20px 0;
+            box-shadow: var(--shadow-lg);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-icon {
+            font-size: 28px;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #d97706;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid white;
+        }
+
+        .btn-secondary:hover {
+            background: white;
+            color: var(--primary);
+        }
+
+        /* HERO SECTION */
+        .hero {
+            background: linear-gradient(135deg, var(--primary) 0%, #0369a1 100%);
+            color: white;
+            padding: 60px 20px;
+            text-align: center;
+        }
+
+        .hero-content {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .hero h1 {
+            font-size: 42px;
+            font-weight: 800;
+            margin-bottom: 20px;
+            line-height: 1.2;
+        }
+
+        .hero p {
+            font-size: 18px;
+            margin-bottom: 30px;
+            opacity: 0.95;
+        }
+
+        /* MAIN CONTENT */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .search-bar-container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            margin-bottom: 40px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 16px;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .filters-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .filter-label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-dark);
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .filter-input {
+            padding: 12px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .filter-input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .filter-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 8px 16px;
+            border: 2px solid var(--border);
+            background: white;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .filter-btn:hover,
+        .filter-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .section-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 30px;
+            color: var(--text-dark);
+        }
+
+        /* JOB LISTINGS */
+        .jobs-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .job-card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+            border-left: 4px solid var(--primary);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .job-card:hover {
+            transform: translateY(-8px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .job-card.saved {
+            border-left-color: var(--accent);
+        }
+
+        .job-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+            gap: 10px;
+        }
+
+        .job-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 5px;
+        }
+
+        .job-company {
+            font-size: 14px;
+            color: var(--text-light);
+            font-weight: 500;
+        }
+
+        .save-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .save-btn:hover {
+            transform: scale(1.2);
+        }
+
+        .job-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin: 15px 0;
+            padding: 15px 0;
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .info-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .info-label {
+            font-size: 12px;
+            color: var(--text-light);
+            text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .info-value {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .salary {
+            color: var(--success);
+            font-size: 18px;
+        }
+
+        .job-description {
+            font-size: 14px;
+            color: var(--text-light);
+            margin: 15px 0;
+            line-height: 1.5;
+        }
+
+        .trust-indicators {
+            display: flex;
+            gap: 12px;
+            margin: 12px 0;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 6px 12px;
+            background: #eff6ff;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .badge.verified {
+            background: #ecfdf5;
+            color: var(--success);
+        }
+
+        .badge.popular {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .applicants-count {
+            font-size: 12px;
+            color: var(--text-light);
+            margin: 10px 0;
+            padding: 8px;
+            background: #f1f5f9;
+            border-radius: 6px;
+        }
+
+        .job-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .btn-small {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .btn-apply {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-apply:hover {
+            background: var(--primary-dark);
+        }
+
+        .btn-chat {
+            background: #f0f9ff;
+            color: var(--primary);
+            border: 2px solid var(--primary);
+        }
+
+        .btn-chat:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        /* FEATURE SHOWCASE SECTION */
+        .features-section {
+            background: white;
+            padding: 50px 20px;
+            margin: 60px 0;
+            border-radius: 12px;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        .feature-card {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .feature-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        .feature-card h3 {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: var(--text-dark);
+        }
+
+        .feature-card p {
+            color: var(--text-light);
+            font-size: 14px;
+        }
+
+        /* EMPTY STATE */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-light);
+        }
+
+        .empty-state h3 {
+            font-size: 22px;
+            margin-bottom: 10px;
+            color: var(--text-dark);
+        }
+
+        /* FOOTER */
+        footer {
+            background: var(--text-dark);
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+            margin-top: 80px;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 32px;
+            }
+
+            .jobs-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .filters-section {
+                grid-template-columns: 1fr;
+            }
+
+            .header-content {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .job-info {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* ANIMATIONS */
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .job-card {
+            animation: slideIn 0.5s ease forwards;
+        }
+
+        .job-card:nth-child(1) { animation-delay: 0.1s; }
+        .job-card:nth-child(2) { animation-delay: 0.2s; }
+        .job-card:nth-child(3) { animation-delay: 0.3s; }
+        .job-card:nth-child(4) { animation-delay: 0.4s; }
+    </style>
+</head>
+<body>
+    <!-- HEADER -->
+    <header>
+        <div class="header-content">
+            <div class="logo">
+                <span class="logo-icon">💼</span>
+                <span>Vasaras Darbi</span>
+            </div>
+            <div class="nav-buttons">
+                <button class="btn btn-secondary">Pierakstīties</button>
+                <button class="btn btn-primary">Pievienot sludinājumu</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- HERO SECTION -->
+    <section class="hero">
+        <div class="hero-content">
+            <h1>Atrodi savu ideālo vasaras darbu! 🌞</h1>
+            <p>Viegli un ātri atrod labāk apmaksātu vasaras darbu. Tūkstošiem iespēju studentiem!</p>
+        </div>
+    </section>
+
+    <!-- MAIN CONTENT -->
+    <div class="container">
+        <!-- SEARCH & FILTERS -->
+        <div class="search-bar-container">
+            <input type="text" class="search-input" placeholder="Meklē darba nosaukumu, uzņēmumu...">
+            
+            <div class="filters-section">
+                <div class="filter-group">
+                    <label class="filter-label">📍 Pilsēta</label>
+                    <select class="filter-input">
+                        <option>Visas pilsētas</option>
+                        <option>Rīga</option>
+                        <option>Jūrmala</option>
+                        <option>Daugavpils</option>
+                        <option>Liepāja</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label class="filter-label">💰 Alga (eiro/mēnesī)</label>
+                    <select class="filter-input">
+                        <option>Jebkura</option>
+                        <option>500+</option>
+                        <option>800+</option>
+                        <option>1200+</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label class="filter-label">⏱️ Darba laiks</label>
+                    <select class="filter-input">
+                        <option>Jebkurš</option>
+                        <option>Pilnlaiks</option>
+                        <option>Daļlaiks</option>
+                        <option>Pēc domu</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label class="filter-label">🔧 Darba veids</label>
+                    <select class="filter-input">
+                        <option>Visi</option>
+                        <option>Pārdošana</option>
+                        <option>IT/Programmēšana</option>
+                        <option>Ražošana</option>
+                        <option>Serviss</option>
+                    </select>
+                </div>
+            </div>
+
+            <div style="margin-top: 15px;">
+                <span class="filter-label" style="display: block; margin-bottom: 10px;">Filtri pēc uzticamības:</span>
+                <div class="filter-buttons">
+                    <button class="filter-btn">✓ Pārbaudīti uzņēmumi</button>
+                    <button class="filter-btn">⭐ Ar atsauksmēm</button>
+                    <button class="filter-btn">🔴 Pieņem vēl</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- AVAILABLE JOBS SECTION -->
+        <h2 class="section-title">📢 Aktīvie sludinājumi</h2>
+
+        <div class="jobs-grid">
+            <!-- JOB CARD 1 -->
+            <div class="job-card">
+                <div class="job-header">
+                    <div>
+                        <div class="job-title">Pārdošanas assistents</div>
+                        <div class="job-company">ElektroShop SIA</div>
+                    </div>
+                    <button class="save-btn" onclick="this.innerHTML = (this.innerHTML === '☆') ? '★' : '☆'">☆</button>
+                </div>
+
+                <div class="trust-indicators">
+                    <span class="badge verified">✓ Pārbaudīts</span>
+                    <span class="badge popular">🔴 Pieņem vēl (3)</span>
+                </div>
+
+                <div class="job-info">
+                    <div class="info-item">
+                        <div class="info-label">Alga</div>
+                        <div class="info-value salary">800 €/mēn.</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Pilsēta</div>
+                        <div class="info-value">Rīga</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Darba laiks</div>
+                        <div class="info-value">Pilnlaiks</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Darba veids</div>
+                        <div class="info-value">Pārdošana</div>
+                    </div>
+                </div>
+
+                <div class="job-description">
+                    <strong>Pienākumi:</strong> Pārdošana, klientu apkalpošana, kases kārtošana
+                </div>
+
+                <div class="applicants-count">📊 Jau pieteikušies: 12 cilvēki</div>
+
+                <div class="job-actions">
+                    <button class="btn-small btn-apply">Pieteikties ar 1 klikšķi</button>
+                    <button class="btn-small btn-chat">💬 Čats</button>
+                </div>
+            </div>
+
+            <!-- JOB CARD 2 -->
+            <div class="job-card">
+                <div class="job-header">
+                    <div>
+                        <div class="job-title">Web programmētājs (internship)</div>
+                        <div class="job-company">TechStart Latvia</div>
+                    </div>
+                    <button class="save-btn" onclick="this.innerHTML = (this.innerHTML === '☆') ? '★' : '☆'">☆</button>
+                </div>
+
+                <div class="trust-indicators">
+                    <span class="badge verified">✓ Pārbaudīts</span>
+                    <span class="badge">⭐ 4.8 atsauksmes</span>
+                </div>
+
+                <div class="job-info">
+                    <div class="info-item">
+                        <div class="info-label">Alga</div>
+                        <div class="info-value salary">1200 €/mēn.</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Pilsēta</div>
+                        <div class="info-value">Rīga</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Darba laiks</div>
+                        <div class="info-value">Daļlaiks</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Darba veids</div>
+                        <div class="info-value">IT/Programmēšana</div>
+                    </div>
+                </div>
+
+                <div class="job-description">
+                    <strong>Pienākumi:</strong> HTML/CSS/JavaScript, React komponenti, datubāzes
+                </div>
+
+                <div class="applicants-count">📊 Jau pieteikušies: 8 cilvēki</div>
+
+                <div class="job-actions">
+                    <button class="btn-small btn-apply">Pieteikties ar 1 klikšķi</button>
+                    <button class="btn-small btn-chat">💬 Čats</button>
+                </div>
+            </div>
+
+            <!-- JOB CARD 3 -->
+            <div class="job-card">
+                <div class="job-header">
+                    <div>
+                        <div class="job-title">Kasieris / Kase</div>
+                        <div class="job-company">SuperMarket Latvia</div>
+                    </div>
+                    <button class="save-btn" onclick="this.innerHTML = (this.innerHTML === '☆') ? '★' : '☆'">☆</button>
+                </div>
+
+                <div class="trust-indicators">
+                    <span class="badge verified">✓ Pārbaudīts</span>
+                    <span class="badge">⭐ 4.2 atsauksmes</span>
+                </div>
+
+                <div class="job-info">
+                    <div class="info-item">
+                        <div class="info-label">Alga</div>
+                        <div class="info-value salary">650 €/mēn.</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Pilsēta</div>
+                        <div class="info-value">Jūrmala</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Darba laiks</div>
+                        <div class="info-value">Pilnlaiks</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Darba veids</div>
+                        <div class="info-value">Tirdzniecība</div>
+                    </div>
+                </div>
+
+                <div class="job-description">
+                    <strong>Pienākumi:</strong> Kases darbības, klientu apkalpošana, naudas skaitīšana
+                </div>
+
+                <div class="applicants-count">📊 Jau pieteikušies: 6 cilvēki</div>
+
+                <div class="job-actions">
+                    <button class="btn-small btn-apply">Pieteikties ar 1 klikšķi</button>
+                    <button class="btn-small btn-chat">💬 Čats</button>
+                </div>
+            </div>
+
+            <!-- JOB CARD 4 -->
+            <div class="job-card">
+                <div class="job-header">
+                    <div>
+                        <div class="job-title">Grafiskais dizainers</div>
+                        <div class="job-company">Creative Studio Pro</div>
+                    </div>
+                    <button class="save-btn" onclick="this.innerHTML = (this.innerHTML === '☆') ? '★' : '☆'">☆</button>
+                </div>
+
+                <div class="trust-indicators">
+                    <span class="badge verified">✓ Pārbaudīts</span>
+                    <span class="badge">⭐ 4.9 atsauksmes</span>
+                </div>
+
+                <div class="job-info">
+                    <div class="info-item">
+                        <div class="info-label">Alga</div>
+                        <div class="info-value salary">950 €/mēn.</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Pilsēta</div>
+                        <div class="info-value">Rīga</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Darba laiks</div>
+                        <div class="info-value">Daļlaiks</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Darba veids</div>
+                        <div class="info-value">Dizains</div>
+                    </div>
+                </div>
+
+                <div class="job-description">
+                    <strong>Pienākumi:</strong> Sociālo mediju grafika, reklāmas, loga noformējums
+                </div>
+
+                <div class="applicants-count">📊 Jau pieteikušies: 15 cilvēki</div>
+
+                <div class="job-actions">
+                    <button class="btn-small btn-apply">Pieteikties ar 1 klikšķi</button>
+                    <button class="btn-small btn-chat">💬 Čats</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- FEATURES SECTION -->
+        <section class="features-section">
+            <h2 class="section-title">Kas jums patiks? ✨</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">⭐</div>
+                    <h3>Atsauksmes par uzņēmumiem</h3>
+                    <p>Lasi citu studentu atsauksmes par darba devējiem un pieņem racionālus lēmumus</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📌</div>
+                    <h3>Saglabāt darbus</h3>
+                    <p>Saglabā interesējošos darbus un atgriez pie tiem jebkurā laikā</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">1️⃣</div>
+                    <h3>Vienklika pieteikšanās</h3>
+                    <p>Pieteikies darbam bez liekas papīrdarba, tikai viena pogas spēle</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">💬</div>
+                    <h3>Direkts čats ar darba devēju</h3>
+                    <p>Jautā jautājumus un runā tieši ar darba devējiem bez starpniekiem</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔔</div>
+                    <h3>Paziņojumi par jauniem darbiem</h3>
+                    <p>Saņem tūlītējas paziņojums par jauniem darbiem, kas meklē jūsu profilu</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <h3>Pieteikumu skaits</h3>
+                    <p>Redzi, cik cilvēku jau pieteikušies, lai saprastu konkurenci</p>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- FOOTER -->
+    <footer>
+        <p>&copy; 2026 Vasaras darba piedāvājumi studentiem. Visi tiesības paturētas.</p>
+        <p style="margin-top: 15px; opacity: 0.8; font-size: 14px;">Kontakti: info@vasarasdarbi.lv | +371 67 123 456</p>
+    </footer>
+
+    <script>
+        // INTERACTIVE FEATURES
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                this.classList.toggle('active');
+            });
+        });
+
+        // Search functionality
+        document.querySelector('.search-input').addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            document.querySelectorAll('.job-card').forEach(card => {
+                const title = card.querySelector('.job-title').textContent.toLowerCase();
+                const company = card.querySelector('.job-company').textContent.toLowerCase();
+                if (title.includes(searchTerm) || company.includes(searchTerm)) {
+                    card.style.display = '';
+                } else if (searchTerm) {
+                    card.style.display = 'none';
+                } else {
+                    card.style.display = '';
+                }
+            });
+        });
+    </script>
+</body>
+</html>
