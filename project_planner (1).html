@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Summer Job Platform - Project Planner</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 20px;
+        }
+
+        header h1 {
+            font-size: 32px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            color: #666;
+            font-size: 16px;
+        }
+
+        .progress-section {
+            margin-bottom: 40px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .progress-label {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 12px;
+            background: #e9ecef;
+            border-radius: 6px;
+            overflow: hidden;
+            margin-bottom: 15px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            border-radius: 6px;
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+
+        .progress-text {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .progress-text span {
+            color: #667eea;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #e9ecef;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #dee2e6;
+        }
+
+        .phase {
+            margin-bottom: 30px;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #f8f9fa;
+        }
+
+        .phase-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .phase-header:hover {
+            background: linear-gradient(135deg, #5568d3 0%, #6a3f93 100%);
+        }
+
+        .phase-number {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .phase-info {
+            flex: 1;
+        }
+
+        .phase-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 3px;
+        }
+
+        .phase-time {
+            font-size: 13px;
+            opacity: 0.9;
+        }
+
+        .phase-progress {
+            text-align: right;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .phase-content {
+            padding: 20px;
+            max-height: 1000px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .phase.collapsed .phase-content {
+            max-height: 0;
+            padding: 0 20px;
+        }
+
+        .tasks {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .task {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 14px;
+            background: white;
+            border-radius: 6px;
+            border: 1px solid #dee2e6;
+            transition: all 0.3s ease;
+        }
+
+        .task:hover {
+            border-color: #667eea;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1);
+        }
+
+        .task.completed {
+            background: #f0f7ff;
+            border-color: #667eea;
+        }
+
+        .task-checkbox {
+            width: 22px;
+            height: 22px;
+            border: 2px solid #dee2e6;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            margin-top: 2px;
+            transition: all 0.3s ease;
+        }
+
+        .task:hover .task-checkbox {
+            border-color: #667eea;
+        }
+
+        .task.completed .task-checkbox {
+            background: #667eea;
+            border-color: #667eea;
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .task-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .task-name {
+            font-size: 15px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .task.completed .task-name {
+            color: #999;
+            text-decoration: line-through;
+        }
+
+        .task-desc {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .task-meta {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            font-size: 11px;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .badge-critical {
+            background: #ffe5e5;
+            color: #d32f2f;
+        }
+
+        .badge-important {
+            background: #fff4e6;
+            color: #f57c00;
+        }
+
+        .badge-time {
+            background: #e8eaf6;
+            color: #667eea;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            opacity: 0.9;
+            text-transform: uppercase;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #dee2e6;
+            color: #666;
+            font-size: 13px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+
+            header h1 {
+                font-size: 24px;
+            }
+
+            .phase-header {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .phase-info {
+                text-align: center;
+            }
+
+            .phase-progress {
+                text-align: center;
+            }
+
+            .controls {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🌞 Summer Job Platform</h1>
+            <p>Project Development Planner</p>
+        </header>
+
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-number" id="totalTasks">0</div>
+                <div class="stat-label">Total Tasks</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="completedTasks">0</div>
+                <div class="stat-label">Completed</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="remainingTasks">0</div>
+                <div class="stat-label">Remaining</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="progressPercent">0%</div>
+                <div class="stat-label">Progress</div>
+            </div>
+        </div>
+
+        <div class="progress-section">
+            <div class="progress-label">Overall Progress</div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <div class="progress-text">
+                <span id="completedCount">0</span> / <span id="totalCount">0</span> tasks completed
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn btn-primary" onclick="expandAll()">📂 Expand All</button>
+            <button class="btn btn-secondary" onclick="collapseAll()">📁 Collapse All</button>
+            <button class="btn btn-secondary" onclick="resetAll()">🔄 Reset Progress</button>
+        </div>
+
+        <div id="phasesContainer"></div>
+
+        <footer>
+            <p>✅ Click checkboxes to mark tasks as complete. Your progress is saved automatically!</p>
+            <p style="margin-top: 10px; opacity: 0.7;">Vasaras darba piedāvājumi studentiem - Project Planner</p>
+        </footer>
+    </div>
+
+    <script>
+        const phases = [
+            {
+                number: 0,
+                title: "Setup & Installation",
+                time: "1-2 hours",
+                tasks: [
+                    { id: "0-1", name: "Install Node.js (LTS version)", desc: "Download and install from nodejs.org", priority: "critical" },
+                    { id: "0-2", name: "Install code editor (VS Code)", desc: "Download from code.visualstudio.com", priority: "critical" },
+                    { id: "0-3", name: "Create MongoDB Atlas account (FREE)", desc: "Sign up at mongodb.com/cloud, create a cluster", priority: "critical", time: "~30 min" },
+                    { id: "0-4", name: "Get MongoDB connection string", desc: "Copy your connection string from Atlas dashboard", priority: "critical" }
+                ]
+            },
+            {
+                number: 1,
+                title: "Database Design",
+                time: "2-3 hours",
+                tasks: [
+                    { id: "1-1", name: "Create 'jobs' collection schema", desc: "Design fields: title, company, salary, city, jobType, workTime, description, etc.", priority: "critical" },
+                    { id: "1-2", name: "Create 'students' collection schema", desc: "Fields: name, email, phone, savedJobs, appliedJobs", priority: "critical" },
+                    { id: "1-3", name: "Create 'companies' collection schema", desc: "Fields: name, description, isVerified, rating, reviewsCount", priority: "important" },
+                    { id: "1-4", name: "Add 5-10 demo jobs to database", desc: "Insert test data so you can test with real examples", priority: "important" }
+                ]
+            },
+            {
+                number: 2,
+                title: "Backend (Node.js + Express)",
+                time: "4-5 hours",
+                tasks: [
+                    { id: "2-1", name: "Set up Express server", desc: "npm install express, mongoose, cors, dotenv. Create server.js", priority: "critical" },
+                    { id: "2-2", name: "Connect MongoDB to backend", desc: "Use mongoose.connect() with your connection string", priority: "critical" },
+                    { id: "2-3", name: "Create API route: GET /api/jobs", desc: "Return all jobs from database", priority: "critical" },
+                    { id: "2-4", name: "Create API route: GET /api/jobs/filter", desc: "Filter by city, salary, jobType, workTime", priority: "critical" },
+                    { id: "2-5", name: "Create API route: GET /api/jobs/:id", desc: "Get single job details by ID", priority: "critical" },
+                    { id: "2-6", name: "Create API route: POST /api/jobs (admin)", desc: "Add new job listing", priority: "critical" },
+                    { id: "2-7", name: "Test all API routes with Postman", desc: "Verify each endpoint works correctly", priority: "important" }
+                ]
+            },
+            {
+                number: 3,
+                title: "Frontend - Main Page",
+                time: "4-5 hours",
+                tasks: [
+                    { id: "3-1", name: "Create React app or HTML/CSS setup", desc: "Set up your frontend project structure", priority: "critical" },
+                    { id: "3-2", name: "Build header component (logo, buttons)", desc: "Navigation bar with 'Sign up' and 'Add job' buttons", priority: "important" },
+                    { id: "3-3", name: "Build hero section", desc: "Welcome banner with title and description", priority: "important" },
+                    { id: "3-4", name: "Fetch jobs from API and display", desc: "Use fetch() to get all jobs and show them on page", priority: "critical" },
+                    { id: "3-5", name: "Style job cards (desktop + mobile)", desc: "Make cards attractive with proper spacing, colors, shadows", priority: "important" }
+                ]
+            },
+            {
+                number: 4,
+                title: "Filters & Search",
+                time: "3-4 hours",
+                tasks: [
+                    { id: "4-1", name: "Build filter UI (city, salary, type, time)", desc: "Create dropdown/select inputs for all 4 filters", priority: "critical" },
+                    { id: "4-2", name: "Connect filters to API", desc: "When filter changes, call /api/jobs/filter with parameters", priority: "critical" },
+                    { id: "4-3", name: "Build search bar", desc: "Search by job title or company name", priority: "critical" },
+                    { id: "4-4", name: "Test all filter combinations", desc: "Verify filters work together correctly", priority: "important" }
+                ]
+            },
+            {
+                number: 5,
+                title: "Save Jobs Feature",
+                time: "2-3 hours",
+                tasks: [
+                    { id: "5-1", name: "Add save/unsave button to job cards", desc: "Heart button that toggles (❤️ vs 🤍)", priority: "critical" },
+                    { id: "5-2", name: "Store saved jobs in localStorage", desc: "Persist saved jobs across page refreshes", priority: "important" },
+                    { id: "5-3", name: "Create 'Saved Jobs' page", desc: "Show only saved jobs with same filters", priority: "important" }
+                ]
+            },
+            {
+                number: 6,
+                title: "Job Details & Application",
+                time: "4-5 hours",
+                tasks: [
+                    { id: "6-1", name: "Create job details page", desc: "Click on card → show full job info, company details", priority: "critical" },
+                    { id: "6-2", name: "Build application form (name, email, phone)", desc: "Simple form to apply for a job", priority: "critical" },
+                    { id: "6-3", name: "Connect form to API (POST /apply)", desc: "Submit application and increase applicant count", priority: "critical" },
+                    { id: "6-4", name: "Display applicant count on job card", desc: "Show 'Already applied: X people'", priority: "important" }
+                ]
+            },
+            {
+                number: 7,
+                title: "Admin Panel",
+                time: "3-4 hours",
+                tasks: [
+                    { id: "7-1", name: "Create admin page (/admin route)", desc: "Separate page where you can add new jobs", priority: "important" },
+                    { id: "7-2", name: "Build 'Add new job' form", desc: "Inputs for title, company, salary, city, type, time, description, contact", priority: "critical" },
+                    { id: "7-3", name: "Connect form to POST /api/jobs endpoint", desc: "Submit new job to database", priority: "critical" },
+                    { id: "7-4", name: "View job applications", desc: "List all students who applied to each job", priority: "important" }
+                ]
+            },
+            {
+                number: 8,
+                title: "Reviews & Ratings",
+                time: "3-4 hours",
+                tasks: [
+                    { id: "8-1", name: "Create API routes for reviews", desc: "GET reviews by company, POST new review", priority: "important" },
+                    { id: "8-2", name: "Display company rating on job cards", desc: "Show ⭐ rating (e.g., 4.8 stars)", priority: "important" },
+                    { id: "8-3", name: "Build reviews section on job details page", desc: "List all reviews for the company", priority: "important" },
+                    { id: "8-4", name: "Build review form", desc: "Let students submit their own reviews", priority: "important" }
+                ]
+            },
+            {
+                number: "✓",
+                title: "Final Testing & Polishing",
+                time: "2-3 hours",
+                tasks: [
+                    { id: "9-1", name: "Test all 4 filters work together", priority: "critical" },
+                    { id: "9-2", name: "Verify save/unsave functionality", priority: "critical" },
+                    { id: "9-3", name: "Test application form", priority: "critical" },
+                    { id: "9-4", name: "Check mobile responsiveness", priority: "critical" },
+                    { id: "9-5", name: "Remove console errors", priority: "critical" },
+                    { id: "9-6", name: "Add fresh demo data (no old jobs)", priority: "critical" }
+                ]
+            }
+        ];
+
+        function getPriorityBadge(priority) {
+            if (priority === "critical") return "badge-critical";
+            if (priority === "important") return "badge-important";
+            return "";
+        }
+
+        function getPriorityText(priority) {
+            if (priority === "critical") return "🔴 Critical";
+            if (priority === "important") return "🟡 Important";
+            return "";
+        }
+
+        function renderPhases() {
+            const container = document.getElementById("phasesContainer");
+            container.innerHTML = phases.map((phase, idx) => `
+                <div class="phase" id="phase-${idx}">
+                    <div class="phase-header" onclick="togglePhase(${idx})">
+                        <div class="phase-number">${phase.number}</div>
+                        <div class="phase-info">
+                            <div class="phase-title">${phase.title}</div>
+                            <div class="phase-time">⏱️ ${phase.time}</div>
+                        </div>
+                        <div class="phase-progress">
+                            <span id="phase-progress-${idx}">0</span>/<span id="phase-total-${idx}">0</span> ✓
+                        </div>
+                    </div>
+                    <div class="phase-content">
+                        <div class="tasks">
+                            ${phase.tasks.map(task => `
+                                <div class="task" id="task-${task.id}" data-task="${task.id}">
+                                    <div class="task-checkbox" onclick="toggleTask('${task.id}')"></div>
+                                    <div class="task-content">
+                                        <div class="task-name">${task.name}</div>
+                                        ${task.desc ? `<div class="task-desc">${task.desc}</div>` : ""}
+                                        <div class="task-meta">
+                                            <span class="badge ${getPriorityBadge(task.priority)}">${getPriorityText(task.priority)}</span>
+                                            ${task.time ? `<span class="badge badge-time">${task.time}</span>` : ""}
+                                        </div>
+                                    </div>
+                                </div>
+                            `).join("")}
+                        </div>
+                    </div>
+                </div>
+            `).join("");
+
+            updateProgress();
+        }
+
+        function toggleTask(taskId) {
+            const task = document.getElementById(`task-${taskId}`);
+            task.classList.toggle("completed");
+            updateProgress();
+        }
+
+        function togglePhase(idx) {
+            const phase = document.getElementById(`phase-${idx}`);
+            phase.classList.toggle("collapsed");
+        }
+
+        function expandAll() {
+            document.querySelectorAll(".phase").forEach(phase => phase.classList.remove("collapsed"));
+        }
+
+        function collapseAll() {
+            document.querySelectorAll(".phase").forEach(phase => phase.classList.add("collapsed"));
+        }
+
+        function updateProgress() {
+            const allTasks = document.querySelectorAll(".task");
+            const completedTasks = document.querySelectorAll(".task.completed");
+            const total = allTasks.length;
+            const completed = completedTasks.length;
+            const remaining = total - completed;
+            const percentage = Math.round((completed / total) * 100);
+
+            document.getElementById("totalTasks").textContent = total;
+            document.getElementById("completedTasks").textContent = completed;
+            document.getElementById("remainingTasks").textContent = remaining;
+            document.getElementById("progressPercent").textContent = percentage + "%";
+            document.getElementById("completedCount").textContent = completed;
+            document.getElementById("totalCount").textContent = total;
+            document.getElementById("progressFill").style.width = percentage + "%";
+
+            // Update phase progress
+            phases.forEach((phase, idx) => {
+                const phaseElement = document.getElementById(`phase-${idx}`);
+                const phaseTasks = phaseElement.querySelectorAll(".task");
+                const phaseCompleted = phaseElement.querySelectorAll(".task.completed");
+                document.getElementById(`phase-progress-${idx}`).textContent = phaseCompleted.length;
+                document.getElementById(`phase-total-${idx}`).textContent = phaseTasks.length;
+            });
+
+            saveProgress();
+        }
+
+        function saveProgress() {
+            const state = {};
+            document.querySelectorAll(".task").forEach(task => {
+                const taskId = task.id.replace("task-", "");
+                state[taskId] = task.classList.contains("completed");
+            });
+            localStorage.setItem("projectPlannerProgress", JSON.stringify(state));
+        }
+
+        function loadProgress() {
+            const saved = JSON.parse(localStorage.getItem("projectPlannerProgress") || "{}");
+            Object.entries(saved).forEach(([taskId, completed]) => {
+                if (completed) {
+                    const task = document.getElementById(`task-${taskId}`);
+                    if (task) task.classList.add("completed");
+                }
+            });
+            updateProgress();
+        }
+
+        function resetAll() {
+            if (confirm("Are you sure? This will reset ALL progress!")) {
+                document.querySelectorAll(".task").forEach(task => task.classList.remove("completed"));
+                localStorage.removeItem("projectPlannerProgress");
+                updateProgress();
+            }
+        }
+
+        renderPhases();
+        loadProgress();
+    </script>
+</body>
+</html>
