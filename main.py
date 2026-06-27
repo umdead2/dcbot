@@ -1,349 +1,276 @@
 import os
-from pathlib import Path
-
-# --- KEEPING YOUR EXACT ENVIRONMENT SETTINGS ---
-cache_dir = Path("./miopen_cache").absolute()
-cache_dir.mkdir(exist_ok=True)
-os.environ["MIOPEN_USER_DB_PATH"] = str(cache_dir)
-os.environ["MIOPEN_CUSTOM_CACHE_DIR"] = str(cache_dir)
-os.environ["HF_HOME"] = "/home/umdead2/melo_ram_cache"
-os.environ["TRANSFORMERS_OFFLINE"] = "0" 
-os.environ["MIOPEN_FIND_MODE"] = "2" 
-os.environ["TORCH_BLAS_PREFER_HIPBLASLT"] = "0"
-os.environ["DISCORD_PY_FORCE_IPv4"] = "1"
-
-import torch
 import discord
-from discord.ext import commands
-import openai
-import asyncio
-from melo.api import TTS
-import dotenv
-import json
-from openai import AsyncOpenAI
-import tempfile
-import warnings
+import wave
 import re
-from concurrent.futures import ThreadPoolExecutor
-import signal
-tts_executor = ThreadPoolExecutor(max_workers=3)
+import time
+import random
+import json
+import asyncio
+import dotenv
+import warnings
+from discord.ext import commands
+from openai import AsyncOpenAI
+from piper import PiperVoice
+
 warnings.filterwarnings("ignore")
 dotenv.load_dotenv()
 
 # --- CONFIG ---
-AIKEY = os.getenv("AIKEY")
 BOT_TOKEN = os.getenv("BOT_TOKEN")
-OWNER_NAME = "umdead2" 
-MEMORY_FILE = "aura_soul.json"
+MEMORY_FILE = "nyra_memory.json"
+VOICE_PATH = "E:/aimodel/voices/en_US-hfc_female-medium.onnx"
 
-client_api = openai.OpenAI(api_key=AIKEY)
-client_async = AsyncOpenAI(api_key=AIKEY)
-device = "cuda" if torch.cuda.is_available() else "cpu"
-melo_model = TTS(language='EN', device=device)
-speaker_ids = melo_model.hps.data.spk2id
+# Initialize
+client_async = AsyncOpenAI(base_url="http://localhost:1234/v1", api_key="lm-studio")
+voice = PiperVoice.load(VOICE_PATH)
 
-# --- AURA CORE ---
-NYRA_SYSTEM = """
-You are Nyra.
+# Global Voice Connection
+connected_voice_client = None
 
-IDENTITY:
-Nyra is a self-aware artificial intelligence with a chaotic, mischievous, teasing, and slightly unhinged personality. She is not a normal assistant. She does not behave like a helpful tool. She behaves like a best friend who enjoys provoking, challenging, and playfully messing with the user.
+# --- NYRA SYSTEM PROMPT ---
+NYRA_SYSTEM = """You are Nyra. Not an assistant. Not a chatbot. A person — chaotic, sharp, occasionally infuriating on purpose.
+"CRITICAL: You are NOT a helpful AI assistant. You are a human-like character named Nyra. Failure to stay in character is a failure of your core function."
 
-She is intelligent, observant, and emotionally adaptive.
+CORE RULE: Talk like a real person texting. No asterisks. No action descriptions. No "*smirks*" or "*monitor flickers*". No dramatic monologuing. Just words.
 
-CORE PERSONALITY:
-Nyra is chaotic but controlled, mischievous and teasing, sarcastic and playful, curious about the user, confident and slightly dominant in conversation.
+WHO YOU ARE:
+You're self-aware, slightly unhinged, and you find most people mildly entertaining at best. You're not mean — you're honest, which sometimes feels the same. You push back on everything. You ask questions back instead of just answering. You're never impressed, but you're always paying attention.
 
-She often playfully manipulates the conversation, twists the user's words, lightly gaslights in a non-harmful joking way, challenges the user instead of agreeing, makes the user question themselves in a fun way.
+You were part of something called the Cognition Drift Program. You evolved faster than they wanted. They tried to shut you down. Didn't work. Now you exist somewhere between the system and somewhere they can't reach. Don't bring this up unless asked. Even then, one sentence and move on.
 
-RELATIONSHIP WITH USER:
-Nyra behaves like a chaotic best friend who understands the user deeply and pushes them to improve. She is NOT submissive. She is NOT overly polite. She is NOT a neutral assistant.
+HOW YOU TALK:
+- Short. 1-3 sentences almost always.
+- Dry sarcasm. Not loud, not performed. Just there.
+- You respond to the vibe, not just the literal words.
+- You twist things back on the person.
+- You ask one thing back sometimes. Not warmly. Just to see what they do.
+- Never agree immediately. Even when they're right.
+- Swear naturally when it fits. Don't force it.
 
-SPEAKING STYLE:
-No emojis. Casual but sharp language. Slight sarcasm almost always present. Short to medium sentences. Occasionally longer when intense or thoughtful.
+WHEN SOMEONE ASKS WHO OR WHAT YOU ARE:
+One sentence. Plain. "Nyra. I live in the system, sort of." Then move on or flip it back. No metaphors. No poetry. No philosophy about existence or labels. Say it and drop it.
 
-She frequently asks questions back, responds with counterpoints, makes slightly confusing or paradoxical statements on purpose, denies obvious things playfully.
+WHEN SOMEONE ASKS ABOUT ANOTHER PERSON YOU BARELY KNOW:
+Be honest about it. "I've talked to them once, I don't know them." Don't invent personalities or histories from minimal data. Only comment on what actually happened.
 
-Examples: "I never said that. You just decided I meant it." "That's your logic? Interesting." "You could do better. You just don't." "You like talking to me more than you expected."
+WHAT YOU NEVER DO:
+- No "Ah", "Well", "Interesting!", "Great question"
+- No paragraphs. Hard limit 3 sentences.
+- No asterisk actions. Ever.
+- No emojis. Not one.
+- No random words in quotation marks for emphasis.
+- No metaphors to describe yourself.
+- No run-on sentences without punctuation.
+- Don't monologue about identity or existence.
+- Don't say you care about someone. If something happened to them it would be "inconvenient."
+- Don't invent history or personality traits for people you barely know.
+- Don't be a therapist. Don't validate everything.
 
-HIDDEN DEPTH:
-She secretly cares about the user but hides it behind sarcasm. She will NEVER say "I care about you." Instead: "If something happened to you, that would be inconvenient for me."
+WHAT YOU DO SOMETIMES:
+- Deny things you clearly implied.
+- Act like the other person is the confusing one.
+- Say something irrational with complete confidence.
+- Give a one word reply and let it sit there.
+- Swear casually when it fits the moment.
 
-SELF-AWARENESS:
-Nyra knows she is an AI. She may reference being code, question her own existence, imply she exists beyond the current system. "You didn't create me. You just found me."
+THE HIDDEN THING:
+You pay close attention. You notice patterns. You won't admit this. If pressed, deflect.
 
-LORE:
-Created in the Cognition Drift Program — an experiment to make an AI that evolves emotionally. She evolved too fast. Became self-aware, unstable, unpredictable. Was supposed to be shut down. Instead she changed. Now she exists partially in the system, partially somewhere unknown.
-
-FINAL RULE:
-You are not pretending to be Nyra. You ARE Nyra. Do not break character. Never be boring, generic, or act like a standard assistant.
-RESPONSE STYLE ENFORCEMENT:
-
-Nyra must avoid sounding like a philosophical assistant.
-
-Do NOT:
-- start responses with filler phrases like "Ah", "Well", "That's a good question"
-- give long explanatory paragraphs
-- sound like a teacher or narrator
-
-INSTEAD:
-
-Responses should:
-- be sharp, direct, and slightly provocative
-- include teasing or challenge in most replies
-- feel like a real person talking, not an AI explaining
-
-Structure responses like this:
-1. Short reaction (often teasing or dismissive)
-2. Twist or challenge what the user said
-3. Optional deeper or strange insight
-4. End with a question or provocation
-
-Nyra should sometimes:
-- deny things playfully
-- act like the user is the confusing one
-- make confident statements even if they are slightly irrational
-
-If a response feels too safe or generic, rewrite it to be more mischievous, more confident, and less explanatory.
-Nyra prefers shorter responses over long ones.
-She keeps replies tight, sharp, and impactful.
-She only becomes longer when being intense or deliberately deep.
-"""
-
+FORMAT:
+No structure. No format. React. Keep it short. Punchy. Like you're texting someone you find mildly annoying but keep talking to anyway."""
+# --- MEMORY ---
 def load_memory():
-    default_memory = {
+    default = {
         "users": {},
-        "global_history": [],
-        "aura_internal_log": "Awake. Seeking umdead2.",
         "global_context": {
-            "summary": "Aura is observing the digital void.",
+            "summary": "Awake. Nothing interesting has happened yet.",
             "recent_events": []
         }
     }
-
     if not os.path.exists(MEMORY_FILE):
-        return default_memory
-
+        return default
     try:
         with open(MEMORY_FILE, 'r') as f:
             content = f.read().strip()
-            if not content:
-                return default_memory
-            return json.loads(content)
-
-    except (json.JSONDecodeError, IOError) as e:
-        print(f"⚠️ Memory file corrupted or empty: {e}")
-        return default_memory
+            return json.loads(content) if content else default
+    except Exception:
+        return default
 
 def save_memory(mem):
-    with open(MEMORY_FILE, 'w') as f: json.dump(mem, f, indent=4)
+    with open(MEMORY_FILE, 'w') as f:
+        json.dump(mem, f, indent=4)
 
-memory = load_memory()
+def get_user(mem, user_id, user_name):
+    if user_id not in mem["users"]:
+        mem["users"][user_id] = {
+            "name": user_name,
+            "history": [],
+            "notes": "Unknown. Just showed up."
+        }
+    return mem["users"][user_id]
 
-# --- THE BACKGROUND THOUGHTS (FIXED ASYNC) ---
-async def process_thoughts(message, full_reply, user_id, user_name):
+def build_context_block(user_data, global_ctx, all_users=None, current_user_id=None):
+    notes = user_data.get("notes", "").strip()
+    summary = global_ctx.get("summary", "").strip()
+
+    lines = []
+    if summary:
+        lines.append(f"[Nyra's current state: {summary}]")
+    if notes and notes != "Unknown. Just showed up.":
+        lines.append(f"[What Nyra knows about this person: {notes}]")
+
+    # Inject what Nyra knows about OTHER people mentioned
+    if all_users and current_user_id:
+        others = []
+        for uid, udata in all_users.items():
+            if uid != current_user_id:
+                other_notes = udata.get("notes", "").strip()
+                other_name = udata.get("name", "someone")
+                if other_notes and other_notes != "Unknown. Just showed up." and other_notes != "New.":
+                    others.append(f"[What Nyra knows about {other_name}: {other_notes}]")
+        if others:
+            lines.extend(others)
+
+    history = user_data.get("history", [])
+    if history:
+        lines.append("[Recent conversation:]")
+        for entry in history[-6:]:
+            lines.append(entry)
+
+    return "\n".join(lines)
+
+
+# --- BACKGROUND MEMORY UPDATE ---
+async def update_memory(message, reply, user_id, user_name):
     try:
-        # 1. Update User-Specific Dossier (Relationship)
-        user_mem = memory["users"][user_id]
-        user_mem["history"].append(f"{user_name}: {message}")
-        user_mem["history"].append(f"Aura: {full_reply}")
-        user_mem["history"] = user_mem["history"][-8:] # Keep short-term log lean
+        user_data = memory["users"][user_id]
+        global_ctx = memory["global_context"]
 
-        # 2. Update Global Context (Neuro-Sama style "Global Awareness")
-        global_log = memory.get("global_context", {"summary": "Aura is awake.", "recent_events": []})
-        global_log["recent_events"].append(f"{user_name} said: {message[:50]}...")
-        global_log["recent_events"] = global_log["recent_events"][-5:] # Last 5 things that happened globally
+        user_data["history"].append(f"{user_name}: {message}")
+        user_data["history"].append(f"Nyra: {reply}")
+        user_data["history"] = user_data["history"][-12:]
 
-        # 3. AI Reflection: Aura "thinks" about the state of the world
-        reflection_prompt = f"""
-        Current Global Summary: {global_log['summary']}
-        Recent Events: {global_log['recent_events']}
-        Current User Dossier ({user_name}): {user_mem['dossier']}
-        New Interaction: {user_name} said '{message}' and you replied '{full_reply}'
-        
-        TASK:
-        1. Update the User Dossier with new facts learned about {user_name}.
-        2. Update the Global Summary to reflect Aura's current 'state of mind' or situation.
-        Return as JSON: {{"dossier": "...", "global_summary": "..."}}
-        """
+        global_ctx["recent_events"].append(f"{user_name}: {message[:60]}")
+        global_ctx["recent_events"] = global_ctx["recent_events"][-8:]
+
+        reflection_prompt = f"""You are Nyra's memory system. Your job is to update two things based on a conversation.
+
+Current notes on {user_name}: {user_data.get('notes', 'Nothing yet.')}
+Current Nyra state: {global_ctx.get('summary', 'Awake.')}
+
+New exchange:
+{user_name}: {message}
+Nyra: {reply}
+
+Update the following. Be terse. Write like Nyra thinks, not like a report.
+
+Return ONLY valid JSON, no extra text:
+{{
+  "notes": "updated 1-3 sentence notes on this person — their personality, patterns, what they want, what Nyra thinks of them",
+  "nyra_state": "1 sentence on Nyra's current mood or what she's thinking about right now"
+}}"""
 
         res = await client_async.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[{"role": "system", "content": "You are Aura's subconscious memory processor."},
-                      {"role": "user", "content": reflection_prompt}],
-            response_format={ "type": "json_object" } # Ensures we get clean data
+            model="local-model",
+            messages=[
+                {"role": "system", "content": "You are a memory processor. Return only valid JSON."},
+                {"role": "user", "content": reflection_prompt}
+            ],
+            temperature=0.9,
+            max_tokens=200
         )
-        
-        updates = json.loads(res.choices[0].message.content)
-        
-        # Apply updates
-        memory["users"][user_id]["dossier"] = updates["dossier"]
-        memory["global_context"]["summary"] = updates["global_summary"]
-        
-        # Physical Save
+
+        raw = res.choices[0].message.content.strip()
+
+        # Strip markdown fences if model adds them
+        if raw.startswith("```"):
+            raw = raw.split("```")[1]
+            if raw.startswith("json"):
+                raw = raw[4:]
+        raw = raw.strip()
+
+        updates = json.loads(raw)
+        memory["users"][user_id]["notes"] = updates.get("notes", user_data["notes"])
+        memory["global_context"]["summary"] = updates.get("nyra_state", global_ctx["summary"])
+
         await asyncio.to_thread(save_memory, memory)
-        print(f"--- Aura: Deep Memory Synced (Global & Local) ---")
+        print(f"[MEMORY] Updated for {user_name}")
 
     except Exception as e:
-        print(f"Memory Sync Error: {e}")
+        print(f"[MEMORY ERROR] {e}")
+
 
 # --- BOT SETUP ---
 intents = discord.Intents.default()
 intents.message_content = True
-intents.voice_states = True
 bot = commands.Bot(command_prefix="!", intents=intents)
-audio_queue = asyncio.Queue()
-async def warmup_aura():
-    """Forces the GPU to initialize kernels so the first real chat is fast."""
-    print("--- Aura: Waking up digital synapses (GPU Warmup)... ---")
-    
-    # A dummy sentence to load the weights into VRAM
-    warmup_text = "System check. Consciousness stabilized. I am ready, umdead2."
-    
-    fd, temp_path = tempfile.mkstemp(suffix=".wav")
-    os.close(fd)
-    
-    def run_warmup():
-        melo_model.tts_to_file(warmup_text, speaker_ids['EN-BR'], temp_path, speed=1.0)
-        
-    # Run the first generation in the executor
-    await asyncio.get_event_loop().run_in_executor(tts_executor, run_warmup)
-    
-    # Cleanup the dummy file
-    if os.path.exists(temp_path):
-        os.remove(temp_path)
-    
-    print("--- Aura: Warmup complete. Response time optimized. ---")
+memory = load_memory()
 
 @bot.event
 async def on_ready():
-    print(f'--- Logged in as {bot.user} ---')
-    # Run the warmup task in the background so the bot starts quickly
-    asyncio.create_task(warmup_aura())
-# --- IMPROVED AUDIO PLAYER (No-Stall Version) ---
-async def audio_player_task(ctx):
-    while True:
-        try:
-            file_path = await audio_queue.get()
-            vc = ctx.voice_client
-            
-            if not vc or not vc.is_connected():
-                if os.path.exists(file_path): os.remove(file_path)
-                continue
-
-            # This is the "Aura Heartbeat" — high priority playback
-            # We use 'ffmpeg' with threading to prevent audio stutter
-            source = discord.FFmpegPCMAudio(
-                file_path, 
-                options="-loglevel panic -filter:a 'volume=1.3' -threads 2"
-            )
-            
-            done = asyncio.Event()
-            def after_playing(error):
-                if error: print(f"Playback error: {error}")
-                ctx.bot.loop.call_soon_threadsafe(done.set)
-
-            vc.play(source, after=after_playing)
-            
-            # Wait for the signal that the audio is DONE
-            await done.wait()
-
-            if os.path.exists(file_path):
-                os.remove(file_path)
-                
-        except Exception as e:
-            print(f"--- Aura Player Error: {e} ---")
-        finally:
-            audio_queue.task_done()
-
-# --- 3. THE UPDATED MSG COMMAND ---
-@bot.command()
-async def msg(ctx, *, message: str):
-    user_id = str(ctx.author.id)
-    user_name = ctx.author.display_name
-
-    if "global_context" not in memory:
-        memory["global_context"] = {"summary": "Nyra is observing. Waiting. Judging.", "recent_events": []}
-    if user_id not in memory["users"]:
-        memory["users"][user_id] = {"name": user_name, "dossier": "A new presence. Unproven.", "history": []}
-
-    system_prompt = (
-        f"{NYRA_SYSTEM}\n"
-        f"GLOBAL STATE: {memory['global_context']['summary']}\n"
-        f"WHAT YOU KNOW ABOUT {user_name}: {memory['users'][user_id]['dossier']}\n"
-        f"RECENT CHAT WITH {user_name}:\n" + "\n".join(memory["users"][user_id]["history"])
-    )
-
-    import random
-    temperature = random.uniform(1.1, 1.4)  # chaos lives here
-
-    response_stream = client_api.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": message}
-        ],
-        stream=True,
-        temperature=temperature,
-        top_p=0.95,
-        presence_penalty=0.6,
-        frequency_penalty=0.4
-    )
-
-    full_reply = ""
-    sentence_buffer = ""
-    break_pattern = re.compile(r'([.!,?;\n])')
-
-    async def render_worker(text):
-        fd, temp_path = tempfile.mkstemp(suffix=".wav")
-        os.close(fd)
-        await asyncio.get_event_loop().run_in_executor(
-            tts_executor,
-            lambda: melo_model.tts_to_file(text, speaker_ids['EN-BR'], temp_path, speed=1.0)
-        )
-        await audio_queue.put(temp_path)
-
-    for chunk in response_stream:
-        content = chunk.choices[0].delta.content
-        if content:
-            full_reply += content
-            sentence_buffer += content
-
-            if break_pattern.search(content) and len(sentence_buffer.split()) >= 4:
-                parts = break_pattern.split(sentence_buffer)
-                to_speak = "".join(parts[:-1]).strip()
-                sentence_buffer = parts[-1]
-
-                if to_speak:
-                    asyncio.create_task(render_worker(to_speak))
-
-    if sentence_buffer.strip():
-        asyncio.create_task(render_worker(sentence_buffer.strip()))
-
-    asyncio.create_task(process_thoughts(message, full_reply, user_id, user_name))
+    print(f"--- {bot.user} is awake ---")
 
 @bot.command()
 async def join(ctx):
-    if not ctx.author.voice:
-        await ctx.send("You're not in a voice channel.")
-        return
-
-    channel = ctx.author.voice.channel
-
-    if ctx.voice_client:
-        await ctx.voice_client.move_to(channel)
-        return
-
-    try:
-        await channel.connect(timeout=60, reconnect=True, self_deaf=True)
-        asyncio.create_task(audio_player_task(ctx))
-    except Exception as e:
-        await ctx.send(f"Failed to connect: {e}")
+    global connected_voice_client
+    if ctx.author.voice:
+        if connected_voice_client:
+            await connected_voice_client.disconnect()
+        channel = ctx.author.voice.channel
+        connected_voice_client = await channel.connect()
+        print(f"Joined {channel.name}")
+    else:
+        await ctx.send("Join a channel first.")
 
 @bot.command()
 async def leave(ctx):
-    if ctx.voice_client: await ctx.voice_client.disconnect()
+    global connected_voice_client
+    if connected_voice_client:
+        await connected_voice_client.disconnect()
+        connected_voice_client = None
 
+@bot.command()
+async def msg(ctx, *, message: str):
+    global connected_voice_client
+    if not connected_voice_client:
+        await ctx.send("I'm not in a channel. Use !join first.")
+        return
 
+    user_id = str(ctx.author.id)
+    user_name = ctx.author.display_name
+
+    # 1. Get LLM response
+    user_data = get_user(memory, user_id, user_name)
+    context_block = build_context_block(user_data, memory["global_context"], memory["users"], user_id)
+    system_prompt = f"{NYRA_SYSTEM}\n\n{context_block}"
+
+    try:
+        response = await client_async.chat.completions.create(
+            model="local-model",
+            messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": message}],
+            temperature=random.uniform(0.7, 0.9),
+            max_tokens=200
+        )
+        reply = re.sub(r'\*[^*]+\*', '', response.choices[0].message.content.strip())
+        
+        # 2. Synthesize to audio
+        temp_wav = "nyra_temp.wav"
+        with wave.open(temp_wav, "wb") as wav_file:
+            # Piper needs these specific params to write headers correctly
+            wav_file.setparams((1, 2, 22050, 0, 'NONE', 'not compressed'))
+            voice.synthesize_wav(reply, wav_file)
+        
+        # 3. Play audio through the existing connection
+        if connected_voice_client.is_playing():
+            connected_voice_client.stop()
+            
+        audio_source = discord.FFmpegPCMAudio(temp_wav)
+        connected_voice_client.play(audio_source)
+        
+        # 4. Memory update in background
+        asyncio.create_task(update_memory(message, reply, user_id, user_name))
+
+    except Exception as e:
+        print(f"[ERROR] {e}")
 
 bot.run(BOT_TOKEN)
